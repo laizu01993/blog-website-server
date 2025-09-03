@@ -31,18 +31,29 @@ async function run() {
         const blogCollection = client.db('blogDB').collection('blog');
 
         // for getting data from add blog form in the client side (create)
-        app.post('/blogs', async(req, res) =>{
+        app.post('/blogs', async (req, res) => {
             const newBlog = req.body;
             const result = await blogCollection.insertOne(newBlog);
             res.send(result);
         })
 
         // for reading all blog data in the server site for using in the client site that are already saved in the mongodb(read)
-        app.get('/blogs', async(req, res) =>{
+        app.get('/blogs', async (req, res) => {
             const allBlogs = blogCollection.find();
             const result = await allBlogs.toArray();
             res.send(result);
-        }) 
+        })
+
+        // for reading only6 recent blog posts
+        app.get('/recentBlogs', async (req, res) => {
+            const result = await blogCollection
+                .find()
+                .sort({ createdAt: -1 }) // latest first
+                .limit(6) // only 6 recent blogs
+                .toArray();
+            res.send(result);
+        });
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
