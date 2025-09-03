@@ -30,12 +30,19 @@ async function run() {
         // collection
         const blogCollection = client.db('blogDB').collection('blog');
 
-        // for getting data from add blog form in the client side
-        app.post('/blog', async(req, res) =>{
+        // for getting data from add blog form in the client side (create)
+        app.post('/blogs', async(req, res) =>{
             const newBlog = req.body;
             const result = await blogCollection.insertOne(newBlog);
             res.send(result);
         })
+
+        // for reading all blog data in the server site for using in the client site that are already saved in the mongodb(read)
+        app.get('/blogs', async(req, res) =>{
+            const allBlogs = blogCollection.find();
+            const result = await allBlogs.toArray();
+            res.send(result);
+        }) 
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
