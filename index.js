@@ -17,7 +17,7 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@clu
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
-        strict: true,
+        strict: false,
         deprecationErrors: true,
     }
 });
@@ -53,6 +53,11 @@ async function run() {
                 .toArray();
             res.send(result);
         });
+        app.get('/categories', async (req, res) => {
+            const categories = await blogCollection.distinct("category");
+            res.send(categories);
+        });
+
 
 
         // Send a ping to confirm a successful connection
