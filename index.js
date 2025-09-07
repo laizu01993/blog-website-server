@@ -53,6 +53,8 @@ async function run() {
                 .toArray();
             res.send(result);
         });
+
+        // for filter by category 
         app.get('/categories', async (req, res) => {
             const categories = await blogCollection.distinct("category");
             res.send(categories);
