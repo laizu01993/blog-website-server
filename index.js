@@ -27,8 +27,10 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
-        // collection
+        // blog collection
         const blogCollection = client.db('blogDB').collection('blog');
+        //wishList collection
+        const wishlistCollection = client.db('blogDB').collection('wishlist'); 
 
         // for getting data from add blog form in the client side (create)
         app.post('/blogs', async (req, res) => {
@@ -59,6 +61,46 @@ async function run() {
             const categories = await blogCollection.distinct("category");
             res.send(categories);
         });
+
+        // Search blogs by title
+        app.get('/searchBlogs', async (req, res) => {
+            // Get search keyword from frontend
+            const searchQuery = req.query.q; 
+
+            let filter = {};
+            if (searchQuery) {
+                filter = { title: { $regex: searchQuery, $options: "i" } };
+                // $regex = partial match, "i" = case-insensitive
+            }
+
+            const result = await blogCollection.find(filter).toArray();
+            res.send(result);
+        });
+
+         // to get watchlist from frontend
+        app.post('/wishlist', async (req, res) => {
+            const item = req.body;
+            const result = await wishlistCollection.insertOne(item);
+            res.send(result);
+        });
+
+        app.get('/wishlist', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email }
+            const result = await wishlistCollection.find(query).toArray();
+            res.send(result);
+        })
+
+
+
+        // users related API (create user)
+        // app.post('/users', async (req, res) => {
+        //     const newUser = req.body;
+        //     console.log(newUser);
+        //     const result = await userCollection.insertOne(newUser);
+        //     res.send(result);
+
+        // });
 
 
 
