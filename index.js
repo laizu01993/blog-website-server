@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 require('dotenv').config();
 
@@ -30,7 +30,7 @@ async function run() {
         // blog collection
         const blogCollection = client.db('blogDB').collection('blog');
         //wishList collection
-        const wishlistCollection = client.db('blogDB').collection('wishlist'); 
+        const wishlistCollection = client.db('blogDB').collection('wishlist');
 
         // for getting data from add blog form in the client side (create)
         app.post('/blogs', async (req, res) => {
@@ -65,7 +65,7 @@ async function run() {
         // Search blogs by title
         app.get('/searchBlogs', async (req, res) => {
             // Get search keyword from frontend
-            const searchQuery = req.query.q; 
+            const searchQuery = req.query.q;
 
             let filter = {};
             if (searchQuery) {
@@ -77,7 +77,7 @@ async function run() {
             res.send(result);
         });
 
-         // to get watchlist from frontend
+        // to get watchlist from frontend
         app.post('/wishlist', async (req, res) => {
             const item = req.body;
             const result = await wishlistCollection.insertOne(item);
@@ -91,7 +91,13 @@ async function run() {
             res.send(result);
         })
 
-
+        // delete from wishlist
+        app.delete('/wishlist/:id', async(req, res) =>{
+            const id = req.params.id;
+            const query = {_id: new ObjectId(id)}
+            const result = await wishlistCollection.deleteOne(query);
+            res.send(result);
+        })
 
         // users related API (create user)
         // app.post('/users', async (req, res) => {
