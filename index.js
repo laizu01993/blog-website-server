@@ -52,7 +52,24 @@ async function run() {
             const query = { _id: new ObjectId(id) }
             const result = await blogCollection.findOne(query);
             res.send(result)
-        })
+        });
+
+        // POST: Add a new comment
+        app.post('/comments', async (req, res) => {
+            const newComment = req.body;
+            const result = await commentCollection.insertOne(newComment);
+            res.send(result);
+        });
+
+        // GET: Fetch comments for a specific blog
+        app.get('/comments', async (req, res) => {
+            const blogId = req.query.blogId;
+            const query = { blogId: blogId };
+            const result = await commentCollection.find(query).toArray();
+            res.send(result);
+        });
+
+
 
         // for reading only6 recent blog posts
         app.get('/recentBlogs', async (req, res) => {
