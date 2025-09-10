@@ -44,6 +44,14 @@ async function run() {
             const allBlogs = blogCollection.find();
             const result = await allBlogs.toArray();
             res.send(result);
+        });
+
+        // for reading blogDetails by id
+        app.get('/blogs/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await blogCollection.findOne(query);
+            res.send(result)
         })
 
         // for reading only6 recent blog posts
@@ -92,9 +100,9 @@ async function run() {
         })
 
         // delete from wishlist
-        app.delete('/wishlist/:id', async(req, res) =>{
+        app.delete('/wishlist/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id: new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const result = await wishlistCollection.deleteOne(query);
             res.send(result);
         })
