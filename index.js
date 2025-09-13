@@ -31,6 +31,8 @@ async function run() {
         const blogCollection = client.db('blogDB').collection('blog');
         //wishList collection
         const wishlistCollection = client.db('blogDB').collection('wishlist');
+        // comment collection
+        const commentCollection = client.db('blogDB').collection('comments');
 
         // for getting data from add blog form in the client side (create)
         app.post('/blogs', async (req, res) => {
@@ -123,6 +125,33 @@ async function run() {
             const result = await wishlistCollection.deleteOne(query);
             res.send(result);
         })
+
+        // updated blog api
+        // UPDATE blog by id
+        app.put('/blogs/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true }; // creates a new doc if not found (optional)
+            const updatedBlog = req.body;
+
+            const blog = {
+                $set: {
+                    title: updatedBlog.title,
+                    blogImage: updatedBlog.blogImage,
+                    category: updatedBlog.category,
+                    shortDescription: updatedBlog.shortDescription,
+                    longDescription: updatedBlog.longDescription,
+                    email: updatedBlog.email, // blog owner email
+                    name: updatedBlog.name,   // blog owner name
+                    authorImage: updatedBlog.authorImage,
+                    createdAt: updatedBlog.createdAt || new Date()
+                }
+            };
+
+            const result = await blogCollection.updateOne(filter, blog, options);
+            res.send(result);
+        });
+
 
         // users related API (create user)
         // app.post('/users', async (req, res) => {
