@@ -34,6 +34,10 @@ async function run() {
         // comment collection
         const commentCollection = client.db('blogDB').collection('comments');
 
+        // user collection
+        const userCollection = client.db('blogDB').collection('users');
+
+
         // for getting data from add blog form in the client side (create)
         app.post('/blogs', async (req, res) => {
             const newBlog = req.body;
@@ -126,7 +130,7 @@ async function run() {
             res.send(result);
         })
 
-        // updated blog api
+
         // UPDATE blog by id
         app.put('/blogs/:id', async (req, res) => {
             const id = req.params.id;
@@ -154,14 +158,21 @@ async function run() {
 
 
         // users related API (create user)
-        // app.post('/users', async (req, res) => {
-        //     const newUser = req.body;
-        //     console.log(newUser);
-        //     const result = await userCollection.insertOne(newUser);
-        //     res.send(result);
+        app.post('/users', async (req, res) => {
+            const newUser = req.body;
+            console.log(newUser);
+            const result = await userCollection.insertOne(newUser);
+            res.send(result);
 
-        // });
+        });
 
+        // Read users
+
+        app.get('/users', async (req, res) => {
+            const cursor = userCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        });
 
 
         // Send a ping to confirm a successful connection
