@@ -10,21 +10,25 @@ const port = process.env.PORT || 5000;
 
 // middlewear
 app.use(cors({
-    origin: ['http://localhost:5173'],
+    origin: [
+        'http://localhost:5173',
+        'https://blog-website-4e728.web.app',
+        'https://blog-website-4e728.firebaseapp.com/'
+    ],
     credentials: true
 }));
 app.use(express.json());
 app.use(cookieParser());
 
-const verifyToken = (req, res, next) =>{
+const verifyToken = (req, res, next) => {
     const token = req?.cookies?.token;
-    if(!token){
-        return res.status(401).send({message: 'unAuthorized access'})
+    if (!token) {
+        return res.status(401).send({ message: 'unAuthorized access' })
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) =>{
-        if(err){
-            return res.status(401).send({message: 'unAuthorized access'})
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ message: 'unAuthorized access' })
         }
         req.user = decoded;
         next();
@@ -46,7 +50,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         // blog collection
         const blogCollection = client.db('blogDB').collection('blog');
@@ -66,21 +70,21 @@ async function run() {
             res
                 .cookie('token', token, {
                     httpOnly: true,
-                    secure: false, // http://localhost:5173/login
+                    secure: process.env.NODE_ENV === 'production'
                 })
                 .send({ success: true });
         })
 
 
         // for getting data from add blog form in the client side (create)
-        app.post('/blogs', async (req, res) => {
+        app.post('/blogs', verifyToken, async (req, res) => {
             const newBlog = req.body;
             const result = await blogCollection.insertOne(newBlog);
             res.send(result);
         })
 
         // for reading all blog data in the server site for using in the client site that are already saved in the mongodb(read)
-        app.get('/blogs', verifyToken, async (req, res) => {
+        app.get('/blogs', async (req, res) => {
             const allBlogs = blogCollection.find();
             const result = await allBlogs.toArray();
             res.send(result);
@@ -153,8 +157,8 @@ async function run() {
             const email = req.query.email;
             const query = { email: email }
 
-            if(req.user.email !== req.query.email){
-                return res.status(403).send({message: 'forbidden access'})
+            if (req.user.email !== req.query.email) {
+                return res.status(403).send({ message: 'forbidden access' })
             }
 
             const result = await wishlistCollection.find(query).toArray();
@@ -215,8 +219,8 @@ async function run() {
 
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        // await client.db("admin").command({ ping: 1 });
+        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
