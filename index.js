@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 require('dotenv').config();
@@ -7,8 +9,27 @@ require('dotenv').config();
 const port = process.env.PORT || 5000;
 
 // middlewear
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:5173'],
+    credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
+
+const verifyToken = (req, res, next) =>{
+    const token = req?.cookies?.token;
+    if(!token){
+        return res.status(401).send({message: 'unAuthorized access'})
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) =>{
+        if(err){
+            return res.status(401).send({message: 'unAuthorized access'})
+        }
+        req.user = decoded;
+        next();
+    })
+}
 
 // connect with mongodb
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.tye2x.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -38,6 +59,19 @@ async function run() {
         const userCollection = client.db('blogDB').collection('users');
 
 
+        // Auth related API (JWT)
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '1h' });
+            res
+                .cookie('token', token, {
+                    httpOnly: true,
+                    secure: false, // http://localhost:5173/login
+                })
+                .send({ success: true });
+        })
+
+
         // for getting data from add blog form in the client side (create)
         app.post('/blogs', async (req, res) => {
             const newBlog = req.body;
@@ -46,7 +80,7 @@ async function run() {
         })
 
         // for reading all blog data in the server site for using in the client site that are already saved in the mongodb(read)
-        app.get('/blogs', async (req, res) => {
+        app.get('/blogs', verifyToken, async (req, res) => {
             const allBlogs = blogCollection.find();
             const result = await allBlogs.toArray();
             res.send(result);
@@ -115,9 +149,14 @@ async function run() {
             res.send(result);
         });
 
-        app.get('/wishlist', async (req, res) => {
+        app.get('/wishlist', verifyToken, async (req, res) => {
             const email = req.query.email;
             const query = { email: email }
+
+            if(req.user.email !== req.query.email){
+                return res.status(403).send({message: 'forbidden access'})
+            }
+
             const result = await wishlistCollection.find(query).toArray();
             res.send(result);
         })
